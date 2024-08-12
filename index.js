@@ -68,6 +68,7 @@ app.post('/api/users/:_id/exercises', async function(req, res){
   const toId = req.params._id;
   const description = req.body.description;
   const duration = req.body.duration;
+
   let date;
   if (req.body.date) {
     date = new Date(req.body.date);
@@ -92,6 +93,32 @@ app.post('/api/users/:_id/exercises', async function(req, res){
     return res.json({'err': 'user does not exist', err})
   }
   
+})
+
+app.get('/api/users/:_id/logs', async function(req, res){
+  const toId = req.params._id;
+  try {
+    const found_user = await User.findOne({_id : toId});
+    const update_id = found_user._id;
+    const update_user = found_user.username;
+    try{
+      const pre_log = await Exercise.find({username: update_user}).select('-_id description duration date');
+      const log = pre_log.map(logs => ({
+        _id: logs._id,
+        description: logs.description,
+        duration: logs.duration,
+        date: logs.date.toDateString()
+      }))
+      const count = log.length;
+      return res.json({'_id': update_id, 'username': update_user, 'count': count, log})
+    }
+    catch(err) {
+      return res.json({'error': err})
+    }
+    
+  } catch(err) {
+    return res.json(err)
+  }
 })
 /**
  * Connect DB
@@ -126,8 +153,8 @@ app.post('/api/users/:_id/exercises', async function(req, res){
  *    req.params.to yyyy-mm-dd
  *    req.params.limit 1
  * 
- *    const full_log = findOne(Logs.username = username)
- *    res.json({full_log})
+ *    const log = findOne(Logs.username = username)
+ *    res.json({log})
  *      User.name
  *      count array.length + 1
  *      id
