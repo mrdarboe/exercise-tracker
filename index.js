@@ -12,13 +12,29 @@ app.use(bodyParser.urlencoded({ extended: false }))
 
 //Schemas
 const userSchema = new mongoose.Schema({
-  username: String
+  username: {
+    type: String,
+    required: true,
+    unique: true
+  }
 })
 const exerciseSchema = new mongoose.Schema({
-  username: String,
-  description: String,
-  duration: Number,
-  date: Date
+  username: {
+    type: String,
+    required: true,
+  },
+  description: {
+    type: String,
+    required: true,
+  },
+  duration: {
+    type: Number,
+    required: true,
+  },
+  date: {
+    type: Date,
+    required: true,
+  },
 })
 
 //Models
@@ -46,6 +62,36 @@ app.post('/api/users', async function(req, res){
 app.get('/api/users', async function(req, res){
   const all_users = await User.find()
   return res.json(all_users)
+})
+
+app.post('/api/users/:_id/exercises', async function(req, res){
+  const toId = req.params._id;
+  const description = req.body.description;
+  const duration = req.body.duration;
+  let date;
+  if (req.body.date) {
+    date = new Date(req.body.date);
+  } else {
+    date = Date.now();
+  }
+  
+  //const parsedDate = date.toDateString();
+
+  try {
+    const found_user = await User.findOne({_id : toId});
+    const update_user = found_user.username;
+    try{
+      const new_exercise = await new Exercise({username: update_user, description, duration, date})
+      await new_exercise.save();
+      return res.json({_id: found_user._id, username: new_exercise.username, description: new_exercise.description, duration, date: new_exercise.date.toDateString()})
+    }
+    catch(err) {
+      return res.json({'error': err})
+    }
+  } catch(err) {
+    return res.json({'err': 'user does not exist', err})
+  }
+  
 })
 /**
  * Connect DB
