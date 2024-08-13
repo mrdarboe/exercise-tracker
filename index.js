@@ -67,7 +67,7 @@ app.get('/api/users', async function(req, res){
 app.post('/api/users/:_id/exercises', async function(req, res){
   const toId = req.params._id;
   const description = req.body.description;
-  const duration = req.body.duration;
+  const duration = parseInt(req.body.duration);
 
   let date;
   if (req.body.date) {
@@ -85,7 +85,7 @@ app.post('/api/users/:_id/exercises', async function(req, res){
     try{
       const new_exercise = await new Exercise({username: update_user, description, duration, date})
       await new_exercise.save();
-      return res.json({"_id": update_id, "username": update_user, "description": new_exercise.description, "duration": duration, "date": new_exercise.date.toDateString()})
+      return res.json({"_id": update_id, "username": update_user, "date": new_exercise.date.toDateString(), "duration": duration,  "description": new_exercise.description})
     }
     catch(err) {
       return res.json({'error': err})
