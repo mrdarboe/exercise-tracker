@@ -138,8 +138,8 @@ app.get('/api/users/:_id/logs', async function(req, res){
         duration: logs.duration,
         date: logs.date.toDateString()
       }))
-      const from = req.query.from;
-      const to = req.query.to;
+      const from = new Date(req.query.from).toDateString();
+      const to = new Date(req.query.to).toDateString();
       const count = log.length;
       return res.json({'_id': update_id, 'username': update_user, from, to, 'count': count, log})
     }
