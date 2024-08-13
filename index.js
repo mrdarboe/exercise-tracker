@@ -99,18 +99,23 @@ app.post('/api/users/:_id/exercises', async function(req, res){
 app.get('/api/users/:_id/logs', async function(req, res){
   const toId = req.params._id;
   //Get earliest && latest dates or use from && to req queries
-  let earliest_date;
-  let latest_date;
+  let from_query;
+  let to_query;
+
   try {
     const earliest_entry = await Exercise.findOne().sort({date: 1}).limit(1);
-    earliest_date = earliest_entry.date;
     const latest_entry = await Exercise.findOne().sort({date: -1}).limit(1);
-    latest_date = latest_entry.date;
+
+    from_query = req.query.from ? new Date(req.query.from) : earliest_entry.date;
+    to_query = req.query.to ? new Date(req.query.to) : latest_entry.date;
+
+    if (isNaN(from_query) || isNaN(to_query)) {
+      return res.status(400).json({ error: 'Invalid date format. Dates must be in yyyy-mm-dd format.' });
+    }
   } catch(err) {
     return res.json(err)
   }
-  const from_query = req.query.from ? new Date(req.query.from) : earliest_date;
-  const to_query = req.query.to ? new Date(req.query.to) : latest_date;
+  
 
   try {
     const found_user = await User.findOne({_id : toId});
