@@ -97,12 +97,36 @@ app.post('/api/users/:_id/exercises', async function(req, res){
 
 app.get('/api/users/:_id/logs', async function(req, res){
   const toId = req.params._id;
+  //Get earliest && lastest dates or use from && to req queries
+  try {
+    let earliest_date = await Exercise.findOne().sort({date: 1}).limit(1);
+    let latest_date = await Exercise.findOne().sort({date: -1}).limit(1);
+  } catch(err) {
+    return res.json(err)
+  }
+  const from = new Date(req.query.from) || earliest_date;
+  const to = new Date(req.query.to) || latest_date;
+
   try {
     const found_user = await User.findOne({_id : toId});
     const update_id = found_user._id;
     const update_user = found_user.username;
     try{
-      const pre_log = await Exercise.find({username: update_user}).select('-_id description duration date');
+      //Get results with date queried
+      let pre_log = Exercise.find({username: update_user/*, date: {$gte: from, $lte: to}*/}).select('-_id description duration date');
+      //Assign pre_log based on provision of limit
+      try {
+        const limit = parseInt(req.query.limit) || 0;
+        if (limit && limit > 0){
+          pre_log = await pre_log.limit(limit)
+        } else {
+          pre_log = await pre_log
+        }
+      } catch(err) {
+        return res.json(err)
+      }
+      
+      //FORMAT DATE LOGS
       const log = pre_log.map(logs => ({
         _id: logs._id,
         description: logs.description,
@@ -113,7 +137,7 @@ app.get('/api/users/:_id/logs', async function(req, res){
       return res.json({'_id': update_id, 'username': update_user, 'count': count, log})
     }
     catch(err) {
-      return res.json({'error': err})
+      return res.json(err)
     }
     
   } catch(err) {
@@ -152,7 +176,14 @@ app.get('/api/users/:_id/logs', async function(req, res){
  *    req.params.from yyyy-mm-dd
  *    req.params.to yyyy-mm-dd
  *    req.params.limit 1
- * 
+ *    
+ *    get all logs
+ *    show logs .where(date)
+ *      is greater than (from||earliest date in all logs)
+ *      &&
+ *      less than (to||latest date in all logs)
+ *    .limit results to (limit||all)
+ *    
  *    const log = findOne(Logs.username = username)
  *    res.json({log})
  *      User.name
