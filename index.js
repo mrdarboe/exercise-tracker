@@ -53,7 +53,7 @@ app.post('/api/users', async function(req, res){
   try {
     const new_user = await new User({username})
     await new_user.save()
-    return res.json({new_user})
+    return res.json({username: new_user.username, _id: new_user._id})
   } catch(err) {
     return res.send(err)
   }
