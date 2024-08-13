@@ -121,7 +121,7 @@ app.get('/api/users/:_id/logs', async function(req, res){
       let pre_log = Exercise.find({username: update_user, date: {$gte: from_query, $lte: to_query}}).select('-_id description duration date');
       //Assign pre_log based on provision of limit
       try {
-        const limit = parseInt(req.query.limit) || 0;
+        const limit = req.query.limit ? parseInt(req.query.limit) : 0;
         if (limit && limit > 0){
           pre_log = await pre_log.limit(limit)
         } else {
