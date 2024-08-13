@@ -126,7 +126,7 @@ app.get('/api/users/:_id/logs', async function(req, res){
     const update_user = found_user.username;
     try{
       //Get results with date queried
-      let pre_log = Exercise.find({username: update_user, date: {$gte: from_query, $lte: to_query}}).select('-_id description duration date');
+      let pre_log = Exercise.find({username: update_user, date: {$gte: from_query, $lte: to_query}}).select('-_id description duration date').sort({date: -1});
       //Assign pre_log based on provision of limit
       try {
         const limit = req.query.limit ? parseInt(req.query.limit) : 0;
