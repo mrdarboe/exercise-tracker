@@ -79,12 +79,12 @@ app.post('/api/users/:_id/exercises', async function(req, res){
   //const parsedDate = date.toDateString();
 
   try {
-    const found_user = await User.findOne({_id : toId});
+    const found_user = await User.findById({toId});
     const update_user = found_user.username;
     try{
       const new_exercise = await new Exercise({username: update_user, description, duration, date})
       await new_exercise.save();
-      return res.json({_id: found_user._id, username: new_exercise.username, description: new_exercise.description, duration, date: new_exercise.date.toDateString()})
+      return res.json({_id: found_user._id, username: found_user.username, description: new_exercise.description, duration, date: new_exercise.date.toDateString()})
     }
     catch(err) {
       return res.json({'error': err})
