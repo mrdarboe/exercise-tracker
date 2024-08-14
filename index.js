@@ -99,8 +99,9 @@ app.post('/api/users/:_id/exercises', async function(req, res){
 app.get('/api/users/:_id/logs', async function(req, res){
   const toId = req.params._id;
   //Get earliest && latest dates or use from && to req queries
-  let from_query;
-  let to_query;
+  let {from, to} = req.query
+  // let from_query;
+  // let to_query;
 
   try {
     const earliest_entry = await Exercise.findOne().sort({date: 1}).limit(1);
@@ -109,12 +110,9 @@ app.get('/api/users/:_id/logs', async function(req, res){
     const fromNaNTest = !isNaN(Date.parse(req.query.from));
     const toNaNTest = !isNaN(Date.parse(req.query.to));
 
-    from_query = fromNaNTest ? new Date(req.query.from) : earliest_entry.date;
-    to_query = toNaNTest ? new Date(req.query.to) : latest_entry.date;
+    from = fromNaNTest ? new Date(req.query.from) : earliest_entry.date;
+    to = toNaNTest ? new Date(req.query.to) : latest_entry.date;
 
-    // if (isNaN(from_query) || isNaN(to_query)) {
-    //   return res.status(400).json({ error: 'Invalid date format. Dates must be in yyyy-mm-dd format.' });
-    // }
   } catch(err) {
     return res.json(err)
   }
@@ -126,7 +124,7 @@ app.get('/api/users/:_id/logs', async function(req, res){
     const update_user = found_user.username;
     try{
       //Get results with date queried
-      let pre_log = Exercise.find({username: update_user, date: {$gte: from_query, $lte: to_query}}).select('-_id description duration date').sort({date: -1});
+      let pre_log = Exercise.find({username: update_user, date: {$gte: from, $lte: to}}).select('-_id description duration date').sort({date: -1});
       //Assign pre_log based on provision of limit
       try {
         const limit = req.query.limit ? parseInt(req.query.limit) : 0;
@@ -146,10 +144,10 @@ app.get('/api/users/:_id/logs', async function(req, res){
         duration: logs.duration,
         date: logs.date.toDateString()
       }))
-      const from = !isNaN(Date.parse(req.query.from)) ? new Date(req.query.from).toDateString() : undefined;
-      const to = !isNaN(Date.parse(req.query.to)) ? new Date(req.query.to).toDateString() : undefined;
+      // const from = !isNaN(Date.parse(req.query.from)) ? new Date(req.query.from).toDateString() : undefined;
+      // const to = !isNaN(Date.parse(req.query.to)) ? new Date(req.query.to).toDateString() : undefined;
       const count = log.length;
-      return res.json({'_id': update_id, 'username': update_user, from, to, 'count': count, log})
+      return res.json({'_id': update_id, 'username': update_user, "from": new Date(from).toDateString(), "to": new Date(to).toDateString(), 'count': count, log})
     }
     catch(err) {
       return res.json(err)
