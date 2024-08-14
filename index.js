@@ -109,8 +109,8 @@ app.get('/api/users/:_id/logs', async function(req, res){
     const fromNaNTest = !isNaN(Date.parse(req.query.from));
     const toNaNTest = !isNaN(Date.parse(req.query.to));
 
-    from_query = fromNaNTest ? new Date(req.query.from) : earliest_entry.date;
-    to_query = toNaNTest ? new Date(req.query.to) : latest_entry.date;
+    from_query = fromNaNTest ? new Date(req.query.from) : undefined; // earliest_entry.date;
+    to_query = toNaNTest ? new Date(req.query.to) :  undefined; //latest_entry.date;
 
     // if (isNaN(from_query) || isNaN(to_query)) {
     //   return res.status(400).json({ error: 'Invalid date format. Dates must be in yyyy-mm-dd format.' });
@@ -125,8 +125,21 @@ app.get('/api/users/:_id/logs', async function(req, res){
     const update_id = found_user._id;
     const update_user = found_user.username;
     try{
+      let dateObj = {};
+      if (from_query) {
+        dateObj["$gte"] = from_query;
+      }
+      if (to_query) {
+        dateObj["$lte"] = to_query;
+      }
+      let filter = {
+        username: update_user
+      }
+      if (from_query || to_query){
+        filter.date = dateObj
+      }
       //Get results with date queried
-      let pre_log = Exercise.find({username: update_user, date: {$gte: from_query, $lte: to_query}}).select('-_id description duration date').sort({date: -1});
+      let pre_log = Exercise.find(filter).select('-_id description duration date').sort({date: -1});
       //Assign pre_log based on provision of limit
       try {
         const limit = req.query.limit ? parseInt(req.query.limit) : 0;
